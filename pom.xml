@@ -47,6 +47,7 @@
         <module>ckan-filestore</module>
         <module>ckan-plugin</module>
         <module>ckan-plugin-ear</module>
+        <module>dkan-rest-client</module>
     </modules>
 
     <repositories>
