@@ -26,6 +26,8 @@ import com.arjuna.databroker.data.jee.annotation.PostCreated;
 import com.arjuna.databroker.data.jee.annotation.PostRecovery;
 import com.arjuna.databroker.data.jee.annotation.PreConfig;
 import com.arjuna.databroker.data.jee.annotation.PreDelete;
+import org.risbic.dkan.DKANClient;
+import org.risbic.dkan.DKANConnection;
 
 public class FileStoreDKANDataService implements DataService
 {
@@ -33,7 +35,26 @@ public class FileStoreDKANDataService implements DataService
 
     public static final String DKANROOTURL_PROPERTYNAME = "DKAN Root URL";
     public static final String PACKAGEID_PROPERTYNAME   = "Package Id";
-    public static final String APIKEY_PROPERTYNAME      = "API Key";
+    public static final String USERNAME_PROPERTYNAME    = "Username";
+    public static final String PASSWORD_PROPERTYNAME    = "Password";
+
+    private String _dkanRootURL;
+    private String _packageId;
+    private String _username;
+    private String _password;
+
+    private DataFlow             _dataFlow;
+    private String               _name;
+    private Map<String, String>  _properties;
+
+    @DataConsumerInjection(methodName="consumeString")
+    private DataConsumer<String> _dataConsumerString;
+
+    @DataConsumerInjection(methodName="consumeBytes")
+    private DataConsumer<byte[]> _dataConsumerBytes;
+
+    @DataConsumerInjection(methodName="consumeMap")
+    private DataConsumer<Map>    _dataConsumerMap;
 
     public FileStoreDKANDataService()
     {
@@ -91,7 +112,8 @@ public class FileStoreDKANDataService implements DataService
     {
         _dkanRootURL = _properties.get(DKANROOTURL_PROPERTYNAME);
         _packageId   = _properties.get(PACKAGEID_PROPERTYNAME);
-        _apiKey      = _properties.get(APIKEY_PROPERTYNAME);
+        _username    = _properties.get(USERNAME_PROPERTYNAME);
+        _password    = _properties.get(PASSWORD_PROPERTYNAME);
     }
 
     @PreConfig
@@ -152,47 +174,23 @@ public class FileStoreDKANDataService implements DataService
     {
         logger.log(Level.FINE, "FileStoreDKANDataService.consume");
 
+        // Set Defaults
+        fileName = setDefault(fileName, false);
+        resourceName = setDefault(resourceName, false);
+        resourceDescription = setDefault(resourceDescription, true);
+        resourceFormat = setDefault(resourceFormat, true);
+
+        if (data.length == 0)
+        {
+            logger.log(Level.WARNING, "Unable to upload resource with empty data");
+            return;
+        }
+
         try
         {
-            URL uploadURL  = new URL(_dkanRootURL + "/api/action/resource_create");
-
-            String boundaryText = UUID.randomUUID().toString();
-
-            HttpURLConnection resourceCreateConnection = (HttpURLConnection) uploadURL.openConnection();
-            resourceCreateConnection.setDoOutput(true);
-            resourceCreateConnection.setDoInput(true);
-            resourceCreateConnection.setInstanceFollowRedirects(false);
-            resourceCreateConnection.setRequestMethod("POST");
-            resourceCreateConnection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryText);
-            resourceCreateConnection.setRequestProperty("Authorization", _apiKey);
-            resourceCreateConnection.setUseCaches(false);
-
-            try
-            {
-                OutputStream outputStream = resourceCreateConnection.getOutputStream();
-
-                outputFormDataPart(outputStream, "package_id", null, _packageId.getBytes(), "form-data", boundaryText, true);
-                if (resourceName != null)
-                    outputFormDataPart(outputStream, "name", null, resourceName.getBytes(), "form-data", boundaryText, false);
-                if (resourceFormat != null)
-                    outputFormDataPart(outputStream, "format", null, resourceFormat.getBytes(), "form-data", boundaryText, false);
-                if (resourceDescription != null)
-                    outputFormDataPart(outputStream, "description ", null, resourceDescription.getBytes(), "form-data", boundaryText, false);
-                if (fileName != null)
-                    outputFormDataPart(outputStream, "upload", fileName, data, "application/octet-stream", boundaryText, false);
-                else
-                    outputFormDataPart(outputStream, "upload", "upload", data, "application/octet-stream", boundaryText, false);
-                outputEndBoundary(outputStream, boundaryText);
-
-                outputStream.close();
-            }
-            catch (IOException ioException)
-            {
-                logger.log(Level.WARNING, "Problems writing to dkan filestore api" + ioException);
-            }
-
-            if (resourceCreateConnection.getResponseCode() != 200)
-                logger.log(Level.WARNING, "Problems with dkan filestore api invoke: status  = " + resourceCreateConnection.getResponseMessage());
+            DKANConnection connection = DKANClient.connect(_username, _password, _dkanRootURL);
+            String fileId = connection.createFile(data, fileName);
+            connection.createResourceByDataSetTitle(resourceName, resourceDescription, _packageId, fileId);
         }
         catch (Throwable throwable)
         {
@@ -200,40 +198,13 @@ public class FileStoreDKANDataService implements DataService
         }
     }
 
-    private void outputFormDataPart(OutputStream outputStream, String name, String filename, byte[] value, String contentType, String boundaryText, boolean firstOutput)
-        throws IOException
+    private String setDefault(String value, boolean allowEmpty)
     {
-        if (firstOutput)
-            outputStream.write("--".getBytes());
-        else
-            outputStream.write("\r\n--".getBytes());
-        outputStream.write(boundaryText.getBytes());
-        outputStream.write("\r\n".getBytes());
-        outputStream.write("Content-Disposition: form-data; name=\"".getBytes());
-        outputStream.write(name.getBytes());
-        if (filename != null)
+        if (allowEmpty)
         {
-            outputStream.write("\"; filename=\"".getBytes());
-            outputStream.write(filename.getBytes());
+            return (value != null) ? value : "";
         }
-        outputStream.write("\"\r\n".getBytes());
-        if (! "form-data".equals(contentType))
-        {
-            outputStream.write("Content-Type: ".getBytes());
-            outputStream.write(contentType.getBytes());
-            outputStream.write("\r\n".getBytes());
-        }
-        outputStream.write("\r\n".getBytes());
-        outputStream.write(value);
-        outputStream.flush();
-    }
-
-    private void outputEndBoundary(OutputStream outputStream, String boundaryText)
-        throws IOException
-    {
-        outputStream.write("\r\n--".getBytes());
-        outputStream.write(boundaryText.getBytes());
-        outputStream.write("--\r\n".getBytes());
+        return (value != null && value.length() > 0) ? value : UUID.randomUUID().toString();
     }
 
     @Override
@@ -275,18 +246,4 @@ public class FileStoreDKANDataService implements DataService
         else
             return null;
     }
-
-    private String _dkanRootURL;
-    private String _packageId;
-    private String _apiKey;
-
-    private DataFlow             _dataFlow;
-    private String               _name;
-    private Map<String, String>  _properties;
-    @DataConsumerInjection(methodName="consumeString")
-    private DataConsumer<String> _dataConsumerString;
-    @DataConsumerInjection(methodName="consumeBytes")
-    private DataConsumer<byte[]> _dataConsumerBytes;
-    @DataConsumerInjection(methodName="consumeMap")
-    private DataConsumer<Map>    _dataConsumerMap;
 }

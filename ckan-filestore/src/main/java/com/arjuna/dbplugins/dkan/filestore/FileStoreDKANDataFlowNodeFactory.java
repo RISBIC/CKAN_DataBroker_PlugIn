@@ -74,7 +74,8 @@ public class FileStoreDKANDataFlowNodeFactory implements DataFlowNodeFactory
 
                 propertyNames.add(FileStoreDKANDataService.DKANROOTURL_PROPERTYNAME);
                 propertyNames.add(FileStoreDKANDataService.PACKAGEID_PROPERTYNAME);
-                propertyNames.add(FileStoreDKANDataService.APIKEY_PROPERTYNAME);
+                propertyNames.add(FileStoreDKANDataService.USERNAME_PROPERTYNAME);
+                propertyNames.add(FileStoreDKANDataService.PASSWORD_PROPERTYNAME);
 
                 return propertyNames;
             }
