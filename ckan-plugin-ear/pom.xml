@@ -21,6 +21,36 @@
 
     <dependencies>
         <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.0.4</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.4</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.3</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.risbic.dkan</groupId>
+            <artifactId>dkan-rest-client</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>com.arjuna.dbplugins.ckan</groupId>
             <artifactId>ckan-plugin</artifactId>
             <version>1.0.0p1m1</version>
@@ -42,6 +72,31 @@
                 <configuration>
                     <includeLibInApplicationXml>true</includeLibInApplicationXml>
                     <modules>
+                        <jarModule>
+                            <groupId>commons-logging</groupId>
+                            <artifactId>commons-logging</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                        <jarModule>
+                            <groupId>commons-codec</groupId>
+                            <artifactId>commons-codec</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                        <jarModule>
+                            <groupId>org.glassfish</groupId>
+                            <artifactId>javax.json</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                        <jarModule>
+                            <groupId>commons-httpclient</groupId>
+                            <artifactId>commons-httpclient</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                         <jarModule>
+                            <groupId>org.risbic.dkan</groupId>
+                            <artifactId>dkan-rest-client</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
                         <ejbModule>
                             <groupId>com.arjuna.dbplugins.ckan</groupId>
                             <artifactId>ckan-plugin</artifactId>

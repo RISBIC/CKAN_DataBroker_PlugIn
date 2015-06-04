@@ -15,18 +15,19 @@
     </parent>
 
     <dependencies>
-
         <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>3.1</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- For JSON Decoding  -->
         <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-json-p-provider</artifactId>
-            <version>3.0.11.Final</version>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.3</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
