@@ -36,6 +36,8 @@ public class DKANClientTest
 {
    private static final String DKAN_PROPERTIES_FILE = "/dkanapi.properties";
 
+   private static final String DKAN_TEST_UPLOAD_FILE = "/test.csv";
+
    private static final String DKAN_USERNAME_KEY = "username";
 
    private static final String DKAN_PASSWORD_KEY = "password";
@@ -53,7 +55,9 @@ public class DKANClientTest
    {
       try
       {
-         String file = getClass().getResource(DKAN_PROPERTIES_FILE).getFile();
+         Class c = getClass();
+         URL url1 = c.getResource(DKAN_PROPERTIES_FILE);
+         String file = url1.getFile();
 
          try (FileReader fr = new FileReader(file))
          {
@@ -82,7 +86,7 @@ public class DKANClientTest
    public void testFileUpload() throws Exception
    {
       DKANConnection connection = DKANClient.connect(username, password, url);
-      File file = new File("/home/mtaylor/dev/dkan-rest-client/src/test/resources/test.csv");
+      File file = new File(getClass().getResource(DKAN_TEST_UPLOAD_FILE).getFile());
       assertNotNull(connection.createFile(file));
    }
 
@@ -102,7 +106,7 @@ public class DKANClientTest
       String dataSetId = connection.createDataSet("TestResourceDataSet_" + UUID.randomUUID().toString(), "Desc");
 
       // Create File
-      String fileId = connection.createFile(new File(getClass().getResource("/test.csv").getFile()));
+      String fileId = connection.createFile(new File(getClass().getResource(DKAN_TEST_UPLOAD_FILE).getFile()));
 
       // Create Resource
       String resourceId = connection.createResourceByDataSetId("Res_" + UUID.randomUUID().toString(), "Desc", dataSetId, fileId);
